@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "A web-based voice wake-up and recording application",
   "engines": {
     "node": ">=16"
   },
