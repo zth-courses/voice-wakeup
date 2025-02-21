@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { ref, onUnmounted } from 'vue'
-import VoiceWakeup from '@/lib/VoiceWakeup'
+import VoiceWakeup, { VoiceWakeupState } from '@/lib/VoiceWakeup'
 
 const isListening = ref(false)
-const lastCommand = ref('')
 const messages = ref<Array<{ text: string; type: 'user' | 'assistant' }>>([])
 const error = ref('')
 
-const status = ref<'idle' | 'detecting' | 'recording' | 'processing'>('idle')
+const status = ref<VoiceWakeupState>('idle')
 
 const voiceWakeup = new VoiceWakeup({
   wakeWord: '小助手',
@@ -45,7 +44,7 @@ const startListening = async () => {
   try {
     error.value = ''
     isListening.value = true
-    status.value = 'listening'
+    status.value = 'detecting'
     await voiceWakeup.start()
   } catch (err) {
     error.value = (err as Error).message
@@ -56,7 +55,7 @@ const startListening = async () => {
 const stopListening = () => {
   isListening.value = false
   status.value = 'idle'
-  // 实现停止监听的逻辑
+  voiceWakeup.stop()
 }
 
 onUnmounted(() => {
@@ -80,12 +79,19 @@ onUnmounted(() => {
               detecting: '等待说话',
               recording: '正在录音',
               processing: '处理中',
+              error: '发生错误',
             }[status]
           }}
         </div>
       </div>
 
-      <button :class="{ active: isListening }" @click="isListening ? stopListening() : startListening()">
+      <button 
+        :class="{ 
+          active: isListening,
+          error: status === 'error'
+        }" 
+        @click="isListening ? stopListening() : startListening()"
+      >
         {{ isListening ? '停止监听' : '开始监听' }}
       </button>
     </div>
@@ -175,6 +181,10 @@ onUnmounted(() => {
   background: #fff3e0;
 }
 
+.status-indicator.error {
+  background: #ffebee;
+}
+
 button {
   padding: 12px 24px;
   border: none;
@@ -190,6 +200,10 @@ button:hover {
 }
 
 button.active {
+  background: #f44336;
+}
+
+button.error {
   background: #f44336;
 }
 
